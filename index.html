@@ -709,7 +709,7 @@ const CONFIG = {
   lineUrl:  'https://line.me/ti/p/umTOEprRU2',   // LINE 官方帳號加好友連結
   siteUrl:  'https://check.guochenipt.com/',     // 上線後的正式網址（含結尾斜線）
   ga4Id:    '',                                  // 例：'G-XXXXXXXXXX'，留空則不載入
-  metaPixelId: '',                               // 例：'1234567890'，留空則不載入
+  metaPixelId: '301911173489523',                // 例：'1234567890'，留空則不載入
   license:  '商標代理人 TT000588'
 };
 
@@ -1099,11 +1099,19 @@ $('licLine').textContent = CONFIG.license;
    ========================================================= */
 function track(event, params = {}) {
   if (window.gtag) gtag('event', event, params);
-  if (window.fbq) {
-    const map = { quiz_start: 'ViewContent', quiz_complete: 'Lead', line_click: 'Contact' };
-    fbq('trackCustom', event, params);
-    if (map[event]) fbq('track', map[event], params);
-  }
+  if (!window.fbq) return;
+
+  const MAP = {
+    quiz_start:    { custom: 'QuizStart' },
+    quiz_complete: { custom: 'QuizComplete' },
+    line_click:    { custom: 'LineClick', standard: 'Lead' },
+    share:         { custom: 'ShareResult' }
+  };
+
+  const m = MAP[event];
+  if (!m) return;
+  if (m.custom)   fbq('trackCustom', m.custom, params);
+  if (m.standard) fbq('track', m.standard, params);
 }
 
 (function initAnalytics() {

@@ -639,7 +639,7 @@
   }
 </style>
 </head>
-<body>
+<body><nav aria-label="國宸服務入口" style="padding:10px 20px;background:#102b3b;color:white;font:14px/1.8 system-ui;display:flex;gap:18px;flex-wrap:wrap"><a style="color:inherit" href="https://www.guochenipt.com/">國宸商標首頁</a><a style="color:inherit" href="https://lazy.guochenipt.com/">2026 申請指南</a><a style="color:inherit" href="https://check.guochenipt.com/">品牌自我檢核</a><a style="color:inherit" href="https://global.guochenipt.com/">海外布局</a><a style="color:inherit" href="https://sign.guochenipt.com/">委任書簽署</a></nav>
 
 <main class="shell">
 
@@ -664,7 +664,7 @@
       <ul class="facts">
         <li><span class="tick">01</span><span><b>五題，約三十秒</b>　沒有標準答案，照現況選就好。</span></li>
         <li><span class="tick">02</span><span><b>不需留下任何個資</b>　不必填姓名、電話或 Email。</span></li>
-        <li><span class="tick">03</span><span><b>依實務審查邏輯設計</b>　由執業商標代理人依據商標審查基準編製。</span></li>
+        <li><span class="tick">03</span><span><b>依品牌使用情境設計</b>　依填答提供提醒，未連接官方資料庫，不是核准率或法律判斷。</span></li>
       </ul>
 
       <div style="margin-top:26px">
@@ -857,6 +857,8 @@ function buildNotes(a) {
 let idx = 0;
 let answers = [];
 let outcome = null;
+let transitionId = null;
+let transitionLocked = false;
 
 const $ = id => document.getElementById(id);
 const views = { cover: $('view-cover'), quiz: $('view-quiz'), result: $('view-result') };
@@ -868,6 +870,7 @@ function show(name) {
 function setGauge(pct) { $('gauge').style.width = pct + '%'; }
 
 function start() {
+  clearTimeout(transitionId); transitionId=null; transitionLocked=false;
   idx = 0; answers = [];
   show('quiz');
   render();
@@ -905,17 +908,20 @@ function render() {
 }
 
 function choose(i) {
+  if(transitionLocked || !Number.isInteger(i) || i<0 || i>=QUESTIONS[idx].options.length)return;
+  transitionLocked=true;
   answers[idx] = i;
   [...$('options').children].forEach((el, n) =>
     el.setAttribute('aria-pressed', n === i ? 'true' : 'false')
   );
-  setTimeout(() => {
+  transitionId=setTimeout(() => {
+    transitionId=null; transitionLocked=false;
     if (idx < QUESTIONS.length - 1) { idx++; render(); }
     else { finish(); }
   }, 260);
 }
 
-function back() { if (idx > 0) { idx--; render(); } }
+function back() { clearTimeout(transitionId); transitionId=null; transitionLocked=false; if (idx > 0) { idx--; render(); } }
 
 document.addEventListener('keydown', e => {
   if (views.quiz.classList.contains('hidden')) return;
@@ -983,7 +989,7 @@ function finish() {
 
     <section class="risk">
       <div class="risk__top">
-        <span>品牌風險指數</span>
+        <span>品牌檢核提醒分數</span>
         <span class="risk__score" style="color:${band.color}">${s.risk}<span style="font-size:12px;color:var(--ink-faint)">/100　${band.label}</span></span>
       </div>
       <div class="risk__track"><div class="risk__bar" id="riskBar" style="background:${band.color}"></div></div>
@@ -1042,7 +1048,7 @@ function resultText() {
   return [
     `【品牌風險自我檢核結果】`,
     `編號：${o.no}`,
-    `類型：${o.r.type}（風險指數 ${o.risk}／${o.band.label}）`,
+    `類型：${o.r.type}（檢核提醒分數 ${o.risk}／${o.band.label}）`,
     ``,
     `建議辦理事項：`,
     ...o.r.todos.map((t, i) => `${'一二三四五'[i]}、${t}`),
@@ -1069,7 +1075,7 @@ function copyResult(silent) {
 async function share() {
   const data = {
     title: '品牌風險自我檢核表',
-    text: `我的品牌風險指數是 ${outcome.risk}／100（${outcome.r.type}）。你的呢？`,
+    text: `我的品牌檢核提醒分數是 ${outcome.risk}／100（${outcome.r.type}）。你的呢？`,
     url: CONFIG.siteUrl
   };
   if (navigator.share) {
@@ -1137,5 +1143,5 @@ function track(event, params = {}) {
   }
 })();
 </script>
-</body>
+<p style="padding:24px;text-align:center;font:14px/1.8 system-ui">本工具僅依自填答案整理提醒，不查詢官方商標資料庫，也不提供核准機率。需要進一步判斷時，請提供品牌與經營內容由代理人評估。</p></body>
 </html>
